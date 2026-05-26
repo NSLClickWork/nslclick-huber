@@ -10,6 +10,9 @@ const sheetsService = require('./services/sheets');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy headers for secure rate limiting behind tunnels (localtunnel, localhost.run, Vercel)
+app.set('trust proxy', 1);
+
 // Multer setup - Use /tmp for Vercel (read-only filesystem)
 const upload = multer({ dest: process.env.VERCEL ? '/tmp' : 'uploads/' });
 
