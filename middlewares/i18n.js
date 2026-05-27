@@ -15,9 +15,16 @@ const dictionary = {
             available: 'Sẵn sàng từ',
             view_profile: 'Xem hồ sơ',
             download_pdf: 'Tải Setcard (PDF)',
-            view_video: 'Xem Video',
+            view_video: 'Bấm vào để xem video',
             date_of_birth: 'Ngày sinh',
-            profession: 'Nghề'
+            profession: 'Nghề',
+            birth_year: 'Năm sinh',
+            deutsch_level: 'Tiếng Đức',
+            nsl_result: 'Kết quả NSL',
+            integration_level: 'Cấp độ hội nhập',
+            availability: 'Thời gian sẵn sàng',
+            superpowers: 'THẾ MẠNH NỔI BẬT',
+            disclaimer: 'Điểm NSL-Score dựa trên một loạt các bài đánh giá toàn diện để đánh giá IQ, ra quyết định và nhiều kỹ năng khác, với điểm chuẩn trung bình là 48.'
         }
     },
     en: {
@@ -36,9 +43,16 @@ const dictionary = {
             available: 'Available from',
             view_profile: 'View Profile',
             download_pdf: 'Download Setcard (PDF)',
-            view_video: 'Watch Video',
+            view_video: 'Click to watch the video',
             date_of_birth: 'Date of Birth',
-            profession: 'Profession'
+            profession: 'Profession',
+            birth_year: 'Year of Birth',
+            deutsch_level: 'German',
+            nsl_result: 'NSL-Result',
+            integration_level: 'Leistungs- Integrationslevel',
+            availability: 'Availability',
+            superpowers: 'SUPERPOWERS',
+            disclaimer: 'The NSL-Score is based on a series of comprehensive assessments to evaluate IQ, decision-making, and various other skills, achieving an average benchmark score of 48.'
         }
     },
     de: {
@@ -57,9 +71,16 @@ const dictionary = {
             available: 'Verfügbar ab',
             view_profile: 'Profil ansehen',
             download_pdf: 'Setcard herunterladen (PDF)',
-            view_video: 'Video ansehen',
+            view_video: 'Klicken, um das Video anzusehen',
             date_of_birth: 'Geburtsdatum',
-            profession: 'Beruf'
+            profession: 'Beruf',
+            birth_year: 'Geburtsjahr',
+            deutsch_level: 'Deutsch',
+            nsl_result: 'NSL-Result',
+            integration_level: 'Leistungs- Integrationslevel',
+            availability: 'Verfügbarkeit',
+            superpowers: 'SUPERPOWERS',
+            disclaimer: 'Der NSL-Score basiert auf einer Reihe umfassender Beurteilungen zur Bewertung des IQ, der Entscheidungsfindung und verschiedener anderer Fähigkeiten und erreicht einen durchschnittlichen Benchmarkwert von 48.'
         }
     }
 };
@@ -68,10 +89,9 @@ function i18nMiddleware(req, res, next) {
     // Determine language from query string, session, or default to DE for partners
     let lang = req.query.lang || req.session.lang;
     
-    // Default: DE if partner, VI if student
+    // Default: DE for all pages
     if (!lang) {
-        if (req.originalUrl.startsWith('/partner')) lang = 'de';
-        else lang = 'vi';
+        lang = 'de';
     }
 
     if (!['vi', 'en', 'de'].includes(lang)) {

@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
     <title>NSL Admin - Dashboard</title>
-    <link rel="icon" type="image/png" href="/logo.png">
+    <link rel="icon" type="image/png" href="/logo-shadow.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/nsl-design-system.css">
+    <link rel="stylesheet" href="/css/nsl-design-system.css?v=4">
     <style>
         .table-container { overflow-x: auto; margin-top: 20px; }
         .edit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; padding: 20px; background: var(--bg-gray); border-radius: var(--radius-sm); margin-top: 10px;}
@@ -47,9 +47,13 @@
     <div id="toastContainer" class="toast-container"></div>
     
     <div class="wavy-header">
-        <div class="header-controls">
-            <button class="header-link" onclick="toggleArchiveView()" id="toggleViewBtn">View Archived</button>
-            <a href="/admin/logout" class="header-link">Logout</a>
+        <div class="header-controls" style="display: flex; gap: 20px; align-items: center;">
+            <div class="lang-switch" style="background: rgba(0,0,0,0.3); padding: 8px 15px; border-radius: 20px;">
+                <a href="?lang=de" style="color: #fff; text-decoration: none; font-weight: <%= typeof lang !== 'undefined' && lang === 'de' ? '900' : '500' %>; opacity: <%= typeof lang !== 'undefined' && lang === 'de' ? '1' : '0.6' %>;">DE</a> <span style="color:#fff;opacity:0.5">|</span>
+                <a href="?lang=en" style="color: #fff; text-decoration: none; font-weight: <%= typeof lang !== 'undefined' && lang === 'en' ? '900' : '500' %>; opacity: <%= typeof lang !== 'undefined' && lang === 'en' ? '1' : '0.6' %>;">EN</a> <span style="color:#fff;opacity:0.5">|</span>
+                <a href="?lang=vi" style="color: #fff; text-decoration: none; font-weight: <%= typeof lang !== 'undefined' && lang === 'vi' ? '900' : '500' %>; opacity: <%= typeof lang !== 'undefined' && lang === 'vi' ? '1' : '0.6' %>;">VI</a>
+            </div>
+            <a href="/admin/logout" class="header-link" style="border: 2px solid #fff; background: transparent; padding: 6px 15px; border-radius: 5px;">Logout</a>
         </div>
         <svg viewBox="0 0 1000 140" preserveAspectRatio="none" style="width: 100%; height: 100%;">
             <path d="M0,0 L1000,0 L1000,80 Q500,140 0,140 Z" fill="#f2a900" />
@@ -58,7 +62,7 @@
     </div>
 
     <div class="container">
-        <img src="/logo.png" alt="NSL" class="nav-brand-logo">
+        <img src="/logo-shadow.png" alt="NSL" class="nav-brand-logo">
         
         <div class="section-card" style="border: 4px solid var(--text-main); border-radius: 0; box-shadow: 8px 8px 0px var(--text-main);">
             <div class="tabs" style="display: flex; gap: 10px; margin-bottom: 20px;">
@@ -69,14 +73,40 @@
             <div class="section-title" id="pageTitle" style="color: var(--text-main); border-left: 8px solid var(--nsl-gold); padding-left: 15px;">Active Students</div>
             
             <div id="studentsView">
-                <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;" id="actionButtons">
-                    <button class="btn btn-nsl-brutal" onclick="showAddRow()" style="background: var(--text-main); color: #fff;">+ Add Student</button>
-                    <button class="btn btn-nsl-brutal" onclick="batchGenerate('pdfs')" style="border-color: var(--nsl-red); color: var(--nsl-red);">Generate PDF for Selected</button>
-                    <button class="btn btn-nsl-brutal" onclick="batchGenerate('videos')" style="border-color: var(--nsl-gold); color: var(--nsl-gold);">Generate Video for Selected</button>
-                    <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
-                        <span id="adminStudentCount" style="font-weight: bold; background: var(--text-main); color: #fff; padding: 5px 12px; border-radius: var(--radius-pill); font-size: 14px;">0</span>
-                        <input type="text" id="adminStudentSearch" class="form-control" placeholder="Search students..." style="width: 250px; padding: 8px 15px;" oninput="renderTable()">
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px;" id="actionButtons">
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-nsl-brutal" onclick="showAddRow()" style="background: var(--text-main); color: #fff;">+ Add Student</button>
+                        <button class="btn btn-nsl-brutal" onclick="batchGenerate('pdfs')" style="border-color: var(--nsl-red); color: var(--nsl-red);">Generate PDF</button>
+                        <button class="btn btn-nsl-brutal" onclick="batchGenerate('videos')" style="border-color: var(--nsl-gold); color: var(--nsl-gold);">Generate Video</button>
                     </div>
+                </div>
+
+                <div class="tabs" id="adminRankTabs" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                    <button class="btn-nsl-brutal active" style="padding: 6px 12px; font-size: 13px; background: var(--text-main); color: #fff;" onclick="filterAdminRank('ALL', this)">ALL</button>
+                    <button class="btn-nsl-brutal" style="padding: 6px 12px; font-size: 13px;" onclick="filterAdminRank('A', this)">Rank A</button>
+                    <button class="btn-nsl-brutal" style="padding: 6px 12px; font-size: 13px;" onclick="filterAdminRank('B', this)">Rank B</button>
+                    <button class="btn-nsl-brutal" style="padding: 6px 12px; font-size: 13px;" onclick="filterAdminRank('C', this)">Rank C</button>
+                    <button class="btn-nsl-brutal" style="padding: 6px 12px; font-size: 13px;" onclick="filterAdminRank('D', this)">Rank D</button>
+                    <button class="btn-nsl-brutal" style="padding: 6px 12px; font-size: 13px;" onclick="filterAdminRank('E', this)">Rank E</button>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
+                    <span id="adminStudentCount" style="font-weight: bold; background: var(--text-main); color: #fff; padding: 5px 12px; border-radius: var(--radius-pill); font-size: 14px;">0</span>
+                    <select id="adminSortFilter" class="form-control" style="max-width: 150px; padding: 8px 15px; font-size: 14px;" onchange="renderTable()">
+                        <option value="DEFAULT">Default Sort</option>
+                        <option value="SCORE_DESC">Highest Score</option>
+                        <option value="NAME_ASC">Name (A-Z)</option>
+                        <option value="NAME_DESC">Name (Z-A)</option>
+                        <option value="HAS_VIDEO">Has Video Only</option>
+                    </select>
+                    <select id="adminProfessionFilter" class="form-control" style="max-width: 150px; padding: 8px 15px; font-size: 14px;" onchange="renderTable()">
+                        <option value="ALL">All Professions</option>
+                        <option value="HDEU">Pflegefachkraft</option>
+                        <option value="MEC">Mechaniker/in</option>
+                        <option value="KOC">Koch/Köchin</option>
+                        <option value="HOT">Hotelfachmann</option>
+                    </select>
+                    <input type="text" id="adminStudentSearch" class="form-control" placeholder="Search students..." style="flex-grow: 1; max-width: 300px; padding: 8px 15px;" oninput="renderTable()">
                 </div>
 
             <div class="job-panel" id="jobPanel">
@@ -117,6 +147,7 @@
                         <thead>
                             <tr>
                                 <th>Partner Name</th>
+                                <th>Access Code</th>
                                 <th>Allowed Professions</th>
                                 <th>Status</th>
                                 <th>Actions</th>
@@ -257,16 +288,54 @@
             return `<span class="status-badge status-pending">${s}</span>`;
         }
 
+        let adminCurrentRank = 'ALL';
+        function filterAdminRank(rank, btnElement) {
+            adminCurrentRank = rank;
+            const buttons = document.getElementById('adminRankTabs').getElementsByTagName('button');
+            for (let btn of buttons) {
+                btn.classList.remove('active');
+                btn.style.background = '';
+                btn.style.color = '';
+            }
+            if (btnElement) {
+                btnElement.classList.add('active');
+                btnElement.style.background = 'var(--text-main)';
+                btnElement.style.color = '#fff';
+            }
+            renderTable();
+        }
+
         function renderTable() {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
             
             const q = (document.getElementById('adminStudentSearch')?.value || '').toLowerCase();
-            const filtered = allStudents.filter(s => {
+            const prof = (document.getElementById('adminProfessionFilter')?.value || 'ALL');
+            const sortMethod = (document.getElementById('adminSortFilter')?.value || 'DEFAULT');
+            
+            let filtered = allStudents.filter(s => {
                 if (showingArchived ? s.Status !== 'ARCHIVED' : s.Status === 'ARCHIVED') return false;
+                
+                const rank = s.NSLGrade ? s.NSLGrade.toUpperCase() : 'UNKNOWN';
+                if (adminCurrentRank !== 'ALL' && rank !== adminCurrentRank) return false;
+                
+                if (prof !== 'ALL' && (!s.ProfessionCode || !s.ProfessionCode.toUpperCase().includes(prof))) return false;
+                
+                let rawVideo = s['Introduction Video'] || s.YouTubeLink || s.DriveVideoLink || '';
+                let hasVideo = rawVideo && rawVideo.trim().length > 5 && rawVideo.toUpperCase() !== 'FALSE';
+                if (sortMethod === 'HAS_VIDEO' && !hasVideo) return false;
+                
                 if (!q) return true;
                 return [s.StudentID, s.FullName, s.ProfessionCode, s.CenterCode].join(' ').toLowerCase().includes(q);
             });
+            
+            if (sortMethod === 'SCORE_DESC') {
+                filtered.sort((a, b) => parseFloat(b.NSLScore || b.AssessmentScore || 0) - parseFloat(a.NSLScore || a.AssessmentScore || 0));
+            } else if (sortMethod === 'NAME_ASC') {
+                filtered.sort((a, b) => (a.FullName || '').localeCompare(b.FullName || ''));
+            } else if (sortMethod === 'NAME_DESC') {
+                filtered.sort((a, b) => (b.FullName || '').localeCompare(a.FullName || ''));
+            }
             
             document.getElementById('adminStudentCount').innerText = filtered.length;
             
@@ -464,6 +533,12 @@
                 
                 tr.innerHTML = `
                     <td><strong>${escapeHtml(p.partnerName)}</strong></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <code>${escapeHtml(p.accessCode || 'N/A')}</code>
+                            ${p.accessCode ? `<button onclick="copyToClipboard('${escapeHtml(p.accessCode)}')", style="background:none; border:none; cursor:pointer; padding:2px;" title="Copy Code">📋</button>` : ''}
+                        </div>
+                    </td>
                     <td>${escapeHtml(p.allowedProfessions)}</td>
                     <td>${statusBadge}</td>
                     <td>
@@ -556,6 +631,16 @@
                 }
             } catch (err) {
                 notify('Network error', 'error');
+            }
+        }
+
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                notify('Copied to clipboard: ' + text, 'success');
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+                notify('Failed to copy', 'error');
             }
         }
 

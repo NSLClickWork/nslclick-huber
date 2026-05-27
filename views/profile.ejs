@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NSL Portal – Candidate Setcard</title>
-    <link rel="icon" type="image/png" href="/logo.png">
+    <link rel="icon" type="image/png" href="/logo-shadow.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -49,7 +49,7 @@
         .header-controls {
             position: absolute;
             top: 20px;
-            left: 30px;
+            right: 40px;
             z-index: 100;
         }
         
@@ -66,16 +66,7 @@
         
         .header-link:hover { background: rgba(0,0,0,0.6); }
 
-        .banner-title {
-            position: absolute;
-            top: 20px;
-            right: 40px;
-            color: white;
-            font-weight: 900;
-            font-size: 26px;
-            letter-spacing: 1px;
-            z-index: 10;
-        }
+
 
         /* Main Card Container */
         .card-inner {
@@ -102,9 +93,19 @@
 
         .card-logo-box {
             margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .card-logo-box img {
-            height: 70px; /* Increased logo size */
+            height: 80px;
+        }
+        .card-profession-title {
+            font-size: 36px;
+            font-weight: 900;
+            color: var(--nsl-red);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         /* Profile Content Layout */
@@ -225,7 +226,7 @@
             font-size: 13px;
             font-weight: 500;
             color: #666;
-            margin-top: 50px;
+            margin-top: 40px;
             padding: 0 60px;
             line-height: 1.5;
         }
@@ -233,14 +234,16 @@
         /* Video Button */
         .video-action {
             text-align: center;
-            margin-top: 35px;
+            margin-top: 40px;
+            margin-bottom: 10px;
         }
 
         .video-btn {
             display: inline-block;
             background: var(--nsl-red);
             color: white;
-            text-decoration: none;
+            text-decoration: underline;
+            text-underline-offset: 4px;
             padding: 18px 45px;
             border-radius: 50px;
             font-size: 18px;
@@ -272,7 +275,10 @@
             .info-grid { font-size: 16px; column-gap: 15px; }
             .banner-title { font-size: 18px; right: 20px; top: 40px; }
             .superpowers-box { max-width: 100%; padding: 20px; }
-            .video-btn { padding: 15px 30px; font-size: 16px; }
+            
+            .video-action { margin-top: 25px; margin-bottom: 15px; }
+            .video-btn { padding: 14px 24px; font-size: 16px; width: 90%; max-width: 300px; display: inline-block; white-space: normal; line-height: 1.3; }
+            .disclaimer-text { font-size: 11px; margin-top: 20px; padding: 0; width: 100%; line-height: 1.4; color: #777; }
         }
     </style>
 </head>
@@ -311,10 +317,18 @@
     <div class="container">
         <!-- Top Banner Waves -->
         <div class="wavy-header">
-            <div class="header-controls">
-                <a href="/logout" class="header-link">Logout</a>
+        <div class="header-controls" style="display: flex; gap: 20px; align-items: center;">
+            <div class="lang-switch" style="background: rgba(0,0,0,0.3); padding: 8px 15px; border-radius: 20px;">
+                <a href="?lang=de" style="color: #fff; text-decoration: none; font-weight: <%= lang === 'de' ? '900' : '500' %>; opacity: <%= lang === 'de' ? '1' : '0.6' %>;">DE</a> <span style="color:#fff;opacity:0.5">|</span>
+                <a href="?lang=en" style="color: #fff; text-decoration: none; font-weight: <%= lang === 'en' ? '900' : '500' %>; opacity: <%= lang === 'en' ? '1' : '0.6' %>;">EN</a> <span style="color:#fff;opacity:0.5">|</span>
+                <a href="?lang=vi" style="color: #fff; text-decoration: none; font-weight: <%= lang === 'vi' ? '900' : '500' %>; opacity: <%= lang === 'vi' ? '1' : '0.6' %>;">VI</a>
             </div>
-            <div class="banner-title">BERUFE - FACHVERKÄUFERIN</div>
+            <% if (typeof partner !== 'undefined' && partner) { %>
+                <a href="/partner/dashboard" class="header-link" style="border: 2px solid #fff; background: transparent; padding: 6px 15px; border-radius: 5px;">Back</a>
+            <% } else { %>
+                <a href="/login" class="header-link" style="border: 2px solid #fff; background: transparent; padding: 6px 15px; border-radius: 5px;"><%= __('logout') %></a>
+            <% } %>
+        </div>
             <svg viewBox="0 0 1000 140" preserveAspectRatio="none" style="width:100%; height:100%;">
                 <!-- Yellow wave (thick on left) -->
                 <path d="M0,0 L1000,0 L1000,80 Q500,140 0,140 Z" fill="#f2a900" />
@@ -330,7 +344,8 @@
         %>
         <div class="card-inner card-photos-<%= photoCount %>">
             <div class="card-logo-box">
-                <img src="/logo.png" alt="NSL">
+                <img src="/logo-shadow.png" alt="NSL">
+                <div class="card-profession-title">BERUFE - <%= (student['Nghề nghiệp'] || student.Profession || student.ProfessionCode || 'FACHVERKÄUFERIN').toUpperCase() %></div>
             </div>
 
             <div class="profile-flex layout-photos-<%= photoCount %>">
@@ -356,25 +371,11 @@
                     <h2 class="student-name"><%= student['Short Name'] || student.FullName %></h2>
                     
                     <div class="info-grid">
-                        <div class="info-label">Geburtsjahr</div>
-                        <div class="info-sep">:</div>
-                        <div class="info-value"><%= formatValue(birthYear) %></div>
-
-                        <div class="info-label">Deutsch B1</div>
-                        <div class="info-sep">:</div>
-                        <div class="info-value"><%= formatValue(student.DeutschLevel) %></div>
-
-                        <div class="info-label">NSL-Result</div>
-                        <div class="info-sep">:</div>
-                        <div class="info-value"><%= formatValue(actualScore) %></div>
-
-                        <div class="info-label">Leistungs- Integrationslevel</div>
-                        <div class="info-sep">:</div>
-                        <div class="info-value"><%= formatValue(actualLevel) %></div>
-
-                        <div class="info-label">Verfügbarkeit</div>
-                        <div class="info-sep">:</div>
-                        <div class="info-value"><%= actualAvailability %></div>
+                        <div class="info-label"><%= __('birth_year') %></div><div class="info-sep">:</div><div class="info-value"><%= birthYear %></div>
+                        <div class="info-label"><%= __('deutsch_level') %></div><div class="info-sep">:</div><div class="info-value"><%= formatValue(student.DeutschLevel) %></div>
+                        <div class="info-label"><%= __('nsl_result') %></div><div class="info-sep">:</div><div class="info-value"><%= formatValue(actualScore) %></div>
+                        <div class="info-label"><%= __('integration_level') %></div><div class="info-sep">:</div><div class="info-value"><%= formatValue(student.Rank) %></div>
+                        <div class="info-label"><%= __('availability') %></div><div class="info-sep">:</div><div class="info-value"><%= actualAvailability %></div>
                     </div>
 
                     <% 
@@ -385,7 +386,7 @@
                     <% if (sp1 || sp2 || sp3) { %>
                     <!-- Superpowers -->
                     <div class="superpowers-box">
-                        <div class="sp-title">SUPERPOWERS</div>
+                        <div class="sp-title"><%= __('superpowers') %></div>
                         <div class="sp-list">
                             <% if (sp1) { %><p>1. <%= sp1 %></p><% } %>
                             <% if (sp2) { %><p>2. <%= sp2 %></p><% } %>
@@ -396,17 +397,17 @@
                 </div>
             </div>
 
-            <p class="disclaimer-text">
-                Der NSL-Score basiert auf einer Reihe umfassender Beurteilungen zur Bewertung des IQ, der Entscheidungsfindung und verschiedener anderer Fähigkeiten und erreicht einen durchschnittlichen Benchmarkwert von 48.
-            </p>
-
             <% if (hasVideo) { %>
             <div class="video-action">
                 <a href="<%= videoLink %>" target="_blank" class="video-btn">
-                    Klicken, um das Video anzusehen
+                    <%= __('view_video') %>
                 </a>
             </div>
             <% } %>
+
+            <p class="disclaimer-text">
+                <%= __('disclaimer') %>
+            </p>
 
         </div>
 

@@ -1,0 +1,82 @@
+const express = require('express');
+const router = express.Router();
+const { google } = require('googleapis');
+const { serviceAccountClient } = require('../services/googleAuth');
+const sheetsService = require('../services/sheets');
+const driveService = require('../services/drive');
+
+// Student Profile
+router.get('/profile', async (req, res) => {
+    if (!req.session.studentId) {
+        return res.redirect('/');
+    }
+
+    const student = await sheetsService.getStudentById(req.session.studentId);
+    if (!student || student.Status === 'ARCHIVED') {
+        req.session = null;
+        return res.redirect('/');
+    }
+    
+    res.render('profile', { student });
+});
+
+// Shared Photo Proxy Helper
+// Giúp tái sử dụng logic cho cả Photo và Activity Photo mà không cần copy-paste
+function proxyStudentPhoto(photoField, options = {}) {
+    const { checkPartnerPermission = false } = options;
+
+    return async (req, res) => {
+        const studentId = req.params.studentId;
+        
+        // Auth Check
+        const isAdminReq = req.session.isAdmin;
+        const isSelf = req.session.studentId === studentId;
+        const isPartner = req.session.partner != null;
+        
+        if (!isAdminReq && !isSelf && !isPartner) {
+            return res.status(403).send('Forbidden');
+        }
+
+        const student = await sheetsService.getStudentById(studentId);
+        if (!student || student.Status === 'ARCHIVED') {
+            return res.status(404).send('Not Found');
+        }
+
+        // If Partner, check if they are allowed to see this student
+        if (checkPartnerPermission && isPartner && !isAdminReq && !isSelf) {
+            const partnerConfig = req.session.partner;
+            const allowedProfessions = partnerConfig.allowedProfessions ? partnerConfig.allowedProfessions.split(',').map(s => s.trim().toLowerCase()) : [];
+            const allowedCenters = partnerConfig.allowedCenters ? partnerConfig.allowedCenters.split(',').map(s => s.trim().toLowerCase()) : [];
+            
+            const pMatch = allowedProfessions.includes('*') || allowedProfessions.includes((student.ProfessionCode || '').toLowerCase());
+            const cMatch = allowedCenters.includes('*') || allowedCenters.includes((student.CenterCode || '').toLowerCase());
+            if (!pMatch || !cMatch) {
+                return res.status(403).send('Forbidden');
+            }
+        }
+
+        const photoDriveId = driveService.extractDriveId(student[photoField]);
+        if (!photoDriveId) {
+            return res.status(404).send('No Photo');
+        }
+
+        try {
+            const drive = google.drive({ version: 'v3', auth: serviceAccountClient });
+            
+            const response = await drive.files.get({ fileId: photoDriveId, alt: 'media' }, { responseType: 'stream' });
+            res.setHeader('Content-Type', 'image/jpeg');
+            response.data.pipe(res);
+        } catch (err) {
+            console.error(`${photoField} proxy error:`, err.message);
+            res.status(500).send('Error');
+        }
+    };
+}
+
+// Photo Proxy Route (có kiểm tra quyền Partner)
+router.get('/proxy/students/:studentId/photo', proxyStudentPhoto('PhotoLink', { checkPartnerPermission: true }));
+
+// Activity Photo Proxy Route (không kiểm tra quyền Partner)
+router.get('/proxy/students/:studentId/activity-photo', proxyStudentPhoto('ActivityPhotoLink'));
+
+module.exports = router;

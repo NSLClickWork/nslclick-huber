@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NSL Partner Portal</title>
-    <link rel="icon" type="image/png" href="/logo.png">
-    <link rel="stylesheet" href="/css/nsl-design-system.css">
+    <link rel="icon" type="image/png" href="/logo-shadow.png">
+    <link rel="stylesheet" href="/css/nsl-design-system.css?v=4">
     <style>
         .nav-brand-logo { height: 100px; margin-top: -5px; margin-bottom: 20px;}
         .lang-switch a { color: #fff; text-decoration: none; margin-left: 10px; font-weight: 600; opacity: 0.7; }
@@ -75,12 +75,12 @@
     %>
     <div class="wavy-header">
         <div class="header-controls" style="display: flex; gap: 20px; align-items: center;">
-            <div class="lang-switch">
-                <a href="?lang=de" class="<%= lang === 'de' ? 'active' : '' %>">DE</a> |
-                <a href="?lang=en" class="<%= lang === 'en' ? 'active' : '' %>">EN</a> |
-                <a href="?lang=vi" class="<%= lang === 'vi' ? 'active' : '' %>">VI</a>
+            <div class="lang-switch" style="background: rgba(0,0,0,0.3); padding: 8px 15px; border-radius: 20px;">
+                <a href="?lang=de" style="color: #fff; text-decoration: none; font-weight: <%= lang === 'de' ? '900' : '500' %>; opacity: <%= lang === 'de' ? '1' : '0.6' %>;">DE</a> <span style="color:#fff;opacity:0.5">|</span>
+                <a href="?lang=en" style="color: #fff; text-decoration: none; font-weight: <%= lang === 'en' ? '900' : '500' %>; opacity: <%= lang === 'en' ? '1' : '0.6' %>;">EN</a> <span style="color:#fff;opacity:0.5">|</span>
+                <a href="?lang=vi" style="color: #fff; text-decoration: none; font-weight: <%= lang === 'vi' ? '900' : '500' %>; opacity: <%= lang === 'vi' ? '1' : '0.6' %>;">VI</a>
             </div>
-            <a href="/partner/logout" class="header-link"><%= __('logout') %></a>
+            <a href="/partner/logout" class="header-link" style="border: 2px solid #fff; background: transparent; padding: 6px 15px; border-radius: 5px;"><%= __('logout') %></a>
         </div>
         <svg viewBox="0 0 1000 140" preserveAspectRatio="none" style="width: 100%; height: 100%;">
             <path d="M0,0 L1000,0 L1000,80 Q500,140 0,140 Z" fill="#f2a900" />
@@ -89,54 +89,94 @@
     </div>
 
     <div class="container">
-        <img src="/logo.png" alt="NSL" class="nav-brand-logo">
-        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px;">
-            <h2 style="color: var(--text-main); font-weight: 900; text-transform: uppercase; border-left: 8px solid var(--nsl-red); padding-left: 15px; margin: 0;">Candidates Database</h2>
+        <img src="/logo-shadow.png" alt="NSL" class="nav-brand-logo">
+        <div style="margin-bottom: 25px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 style="color: var(--text-main); font-weight: 900; text-transform: uppercase; border-left: 8px solid var(--nsl-red); padding-left: 15px; margin: 0;">Candidates Database</h2>
+            </div>
+            
+            <div class="tabs" id="rankTabs" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                <button class="btn-nsl-brutal active" style="padding: 8px 15px; background: var(--text-main); color: #fff;" onclick="filterByRank('ALL', this)">ALL</button>
+                <button class="btn-nsl-brutal" style="padding: 8px 15px;" onclick="filterByRank('A', this)">Rank A</button>
+                <button class="btn-nsl-brutal" style="padding: 8px 15px;" onclick="filterByRank('B', this)">Rank B</button>
+                <button class="btn-nsl-brutal" style="padding: 8px 15px;" onclick="filterByRank('C', this)">Rank C</button>
+                <button class="btn-nsl-brutal" style="padding: 8px 15px;" onclick="filterByRank('D', this)">Rank D</button>
+                <button class="btn-nsl-brutal" style="padding: 8px 15px;" onclick="filterByRank('E', this)">Rank E</button>
+            </div>
+
             <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                 <span id="studentCount" style="font-weight: bold; background: var(--text-main); color: #fff; padding: 5px 12px; border-radius: var(--radius-pill); font-size: 14px;"><%= students ? students.length : 0 %> Candidates</span>
-                <input type="text" id="searchInput" class="form-control" placeholder="Search by name, profession..." style="max-width: 300px; padding: 8px 15px; font-size: 14px;" onkeyup="filterStudents()">
+                <select id="sortFilter" class="form-control" style="max-width: 170px; padding: 8px 15px; font-size: 14px;" onchange="filterStudents()">
+                    <option value="DEFAULT">Default Sort</option>
+                    <option value="SCORE_DESC">Highest Score</option>
+                    <option value="NAME_ASC">Name (A-Z)</option>
+                    <option value="NAME_DESC">Name (Z-A)</option>
+                    <option value="HAS_VIDEO">Has Video Only</option>
+                </select>
+                <select id="professionFilter" class="form-control" style="max-width: 170px; padding: 8px 15px; font-size: 14px;" onchange="filterStudents()">
+                    <option value="ALL">All Professions</option>
+                    <option value="HDEU"><%= __('professions')['pflege'] %></option>
+                    <option value="MEC"><%= __('professions')['mechaniker'] %></option>
+                    <option value="KOC"><%= __('professions')['koch'] %></option>
+                    <option value="HOT"><%= __('professions')['hotel'] %></option>
+                </select>
+                <input type="text" id="searchInput" class="form-control" placeholder="<%= __('search') %>..." style="flex-grow: 1; max-width: 300px; padding: 8px 15px; font-size: 14px;" onkeyup="filterStudents()">
             </div>
         </div>
         
         <div class="grid" id="studentsGrid">
             <% if (students && students.length > 0) { %>
-                <% students.forEach(student => { %>
-                    <div class="nsl-grid-card" style="--card-hover-color: <%= getCenterColor(student.CenterCode) %>;">
+                <% students.forEach((student, index) => { 
+                    const rank = student.NSLGrade ? student.NSLGrade.toUpperCase() : 'UNKNOWN';
+                    const profCode = student.ProfessionCode || 'UNKNOWN';
+                    let actualScore = student.NSLScore || student.AssessmentScore || 0;
+                    let rawVideo = student['Introduction Video'] || student.YouTubeLink || student.DriveVideoLink || '';
+                    let hasVideo = rawVideo && rawVideo.trim().length > 5 && rawVideo.toUpperCase() !== 'FALSE' ? 'true' : 'false';
+                    let displayName = student['Short Name'] || student.FullName || '';
+                %>
+                    <div class="nsl-grid-card" data-index="<%= index %>" data-rank="<%= rank %>" data-prof="<%= profCode %>" data-score="<%= actualScore %>" data-name="<%= displayName.toUpperCase() %>" data-hasvideo="<%= hasVideo %>" style="--card-hover-color: <%= getCenterColor(student.CenterCode) %>;">
                         <div class="card-header">
                             <img src="/photos/<%= encodeURIComponent(student.FullName) %>.jpg" onerror="this.onerror=null; this.src='/proxy/students/<%= student.StudentID %>/photo'; this.addEventListener('error', function(){this.src='https://ui-avatars.com/api/?name=<%= encodeURIComponent(student.FullName) %>&background=random'});" alt="Photo" class="avatar">
                             <div>
-                                <div class="name"><%= student.FullName %></div>
+                                <div class="name"><%= student['Short Name'] || student.FullName %></div>
                                 <div class="profession"><%= student.ProfessionCode || '' %></div>
                             </div>
                         </div>
                         <div class="card-body">
+                            <% 
+                                let birthYear = '—';
+                                const yearMatch = student.StudentID ? student.StudentID.match(/\d{4}$/) : null;
+                                if (yearMatch) birthYear = yearMatch[0];
+
+                                let displayScore = student.NSLScore || student.AssessmentScore || '—';
+                                let actualLevel = student.NSLGrade || '—';
+                                let actualAvailability = student.AvailableFrom || '—';
+                                let displayDeutschLabel = `${__('deutsch_level')} ${student.DeutschLevel || ''}`;
+                            %>
                             <div class="info-row">
-                                <span class="info-label"><%= __('date_of_birth') || 'Ngày sinh' %></span>
-                                <span class="info-value"><%= student.DOB || 'PENDING' %></span>
+                                <span class="info-label"><%= __('birth_year') %></span>
+                                <span class="info-value"><%= birthYear %></span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label"><%= __('profession') || 'Nghề' %></span>
-                                <span class="info-value"><%= student.ProfessionCode || 'PENDING' %></span>
+                                <span class="info-label"><%= displayDeutschLabel %></span>
+                                <span class="info-value"><%= student.DeutschLevel || '—' %></span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label"><%= __('level') %></span>
-                                <span class="info-value"><%= student.DeutschLevel || 'PENDING' %></span>
+                                <span class="info-label"><%= __('nsl_result') %></span>
+                                <span class="info-value"><%= displayScore %></span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label"><%= __('available') %></span>
-                                <span class="info-value"><%= student.AvailableFrom || 'PENDING' %></span>
+                                <span class="info-label"><%= __('integration_level') %></span>
+                                <span class="info-value"><%= actualLevel %></span>
                             </div>
-                            <div class="info-row" style="background: #fdfdfd;">
-                                <span class="info-label">NSL Score</span>
-                                <% 
-                                    let score = student.NSLScore || student.AssessmentScore;
-                                    let displayScore = (score && score !== '0' && score !== 0) ? `${score}/100` : 'PENDING';
-                                %>
-                                <span class="info-value" style="color: var(--nsl-gold);"><%= displayScore %></span>
+                            <div class="info-row">
+                                <span class="info-label"><%= __('availability') %></span>
+                                <span class="info-value"><%= actualAvailability %></span>
                             </div>
+
                             <% if (student.Strength1 || student.Strength2 || student.Strength3) { %>
                             <div style="margin-top: 15px; border-top: 2px solid var(--border-color); padding-top: 10px;">
-                                <span class="info-label" style="display:block; margin-bottom:8px;">Strengths (Stärken)</span>
+                                <span class="info-label" style="display:block; margin-bottom:8px;">Superpowers</span>
                                 <ul style="list-style-type: square; margin-left: 20px; font-weight: 600; color: var(--text-main); font-size: 13px;">
                                     <% if (student.Strength1) { %><li><%= student.Strength1 %></li><% } %>
                                     <% if (student.Strength2) { %><li><%= student.Strength2 %></li><% } %>
@@ -161,23 +201,65 @@
         </div>
     </div>
     <script>
+        let currentRankFilter = 'ALL';
+
+        function filterByRank(rank, btn) {
+            currentRankFilter = rank;
+            
+            // Update active state of buttons
+            const buttons = document.getElementById('rankTabs').getElementsByTagName('button');
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].style.background = 'transparent';
+                buttons[i].style.color = 'var(--text-main)';
+                buttons[i].classList.remove('active');
+            }
+            btn.style.background = 'var(--text-main)';
+            btn.style.color = '#fff';
+            btn.classList.add('active');
+
+            filterStudents();
+        }
+
         function filterStudents() {
             const query = document.getElementById('searchInput').value.toLowerCase();
+            const profFilter = document.getElementById('professionFilter').value.toUpperCase();
+            const sortFilter = document.getElementById('sortFilter').value;
             const grid = document.getElementById('studentsGrid');
             if (!grid) return;
-            const cards = grid.getElementsByClassName('nsl-grid-card');
+            let cards = Array.from(grid.getElementsByClassName('nsl-grid-card'));
             let count = 0;
             
             for (let i = 0; i < cards.length; i++) {
                 const card = cards[i];
                 const text = card.innerText.toLowerCase();
-                if (text.includes(query)) {
+                const cardRank = card.getAttribute('data-rank');
+                const cardProf = card.getAttribute('data-prof');
+                const cardHasVideo = card.getAttribute('data-hasvideo');
+                
+                const matchesSearch = text.includes(query);
+                const matchesRank = currentRankFilter === 'ALL' || cardRank === currentRankFilter;
+                const matchesProf = profFilter === 'ALL' || cardProf.includes(profFilter);
+                const matchesVideo = sortFilter !== 'HAS_VIDEO' || cardHasVideo === 'true';
+
+                if (matchesSearch && matchesRank && matchesProf && matchesVideo) {
                     card.style.display = '';
                     count++;
                 } else {
                     card.style.display = 'none';
                 }
             }
+            
+            if (sortFilter === 'SCORE_DESC') {
+                cards.sort((a, b) => parseFloat(b.getAttribute('data-score') || 0) - parseFloat(a.getAttribute('data-score') || 0));
+            } else if (sortFilter === 'NAME_ASC') {
+                cards.sort((a, b) => a.getAttribute('data-name').localeCompare(b.getAttribute('data-name')));
+            } else if (sortFilter === 'NAME_DESC') {
+                cards.sort((a, b) => b.getAttribute('data-name').localeCompare(a.getAttribute('data-name')));
+            } else {
+                cards.sort((a, b) => parseInt(a.getAttribute('data-index') || 0) - parseInt(b.getAttribute('data-index') || 0));
+            }
+            
+            cards.forEach(card => grid.appendChild(card));
             
             const countBadge = document.getElementById('studentCount');
             if (countBadge) {

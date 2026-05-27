@@ -54,21 +54,17 @@ async function uploadToDrive(filePath, fileName, mimeType) {
 async function downloadFromDrive(fileId, destPath) {
     const drive = await getDriveInstance();
     
-    return new Promise(async (resolve, reject) => {
-        try {
-            const dest = fs.createWriteStream(destPath);
-            const res = await drive.files.get(
-                { fileId: fileId, alt: 'media' },
-                { responseType: 'stream' }
-            );
+    const res = await drive.files.get(
+        { fileId: fileId, alt: 'media' },
+        { responseType: 'stream' }
+    );
 
-            res.data
-                .on('end', () => resolve(destPath))
-                .on('error', err => reject(err))
-                .pipe(dest);
-        } catch (err) {
-            reject(err);
-        }
+    return new Promise((resolve, reject) => {
+        const dest = fs.createWriteStream(destPath);
+        res.data
+            .on('end', () => resolve(destPath))
+            .on('error', err => reject(err))
+            .pipe(dest);
     });
 }
 

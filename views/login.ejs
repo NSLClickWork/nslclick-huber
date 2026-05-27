@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NSL Portal – Sign In</title>
-    <link rel="icon" type="image/png" href="/logo.png">
-    <link rel="stylesheet" href="/css/nsl-design-system.css">
+    <link rel="icon" type="image/png" href="/logo-shadow.png">
+    <link rel="stylesheet" href="/css/nsl-design-system.css?v=4">
+    <!-- Cloudflare Turnstile Script -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
         .login-page-container {
             width: 100%;
@@ -34,7 +37,10 @@
         .logo-box {
             margin-bottom: 20px;
         }
-        .logo-box img { height: 160px; }
+
+        .logo-box img {
+            height: 160px;
+        }
 
         h1 {
             font-size: 36px;
@@ -44,6 +50,7 @@
             text-transform: uppercase;
             letter-spacing: 2px;
         }
+
         .subtitle {
             font-size: 16px;
             color: var(--text-muted);
@@ -59,7 +66,8 @@
             font-size: 14px;
             font-weight: 600;
             margin-bottom: 24px;
-            border: 2px solid var(--nsl-red); /* Brutalist touch */
+            border: 2px solid var(--nsl-red);
+            /* Brutalist touch */
         }
 
         .footer-text-bottom {
@@ -83,29 +91,66 @@
             text-transform: uppercase;
             transition: all 0.2s ease;
         }
+
         .btn-submit-brutal:hover {
             box-shadow: 4px 4px 0px var(--nsl-red);
             transform: translate(-2px, -2px);
         }
 
         /* Specific buttons */
-        #btn-student { background: var(--text-main); }
-        #btn-partner { background: var(--nsl-red); border-color: var(--nsl-red); }
-        #btn-admin { background: var(--nsl-gold); border-color: var(--nsl-gold); color: var(--text-main); }
+        #btn-student {
+            background: var(--text-main);
+        }
 
-        #btn-partner:hover { box-shadow: 4px 4px 0px var(--text-main); }
-        #btn-admin:hover { box-shadow: 4px 4px 0px var(--text-main); }
+        #btn-partner {
+            background: var(--nsl-red);
+            border-color: var(--nsl-red);
+        }
+
+        #btn-admin {
+            background: var(--nsl-gold);
+            border-color: var(--nsl-gold);
+            color: var(--text-main);
+        }
+
+        #btn-partner:hover {
+            box-shadow: 4px 4px 0px var(--text-main);
+        }
+
+        #btn-admin:hover {
+            box-shadow: 4px 4px 0px var(--text-main);
+        }
 
         @media (max-width: 600px) {
-            .login-content { padding: 20px 30px; }
-            .logo-box { margin-bottom: 25px; }
-            .logo-box img { height: 120px; }
-            h1 { font-size: 28px; }
-            .subtitle { font-size: 14px; margin-bottom: 20px; }
-            .nsl-tab-btn { padding: 10px 15px; font-size: 14px; }
+            .login-content {
+                padding: 20px 30px;
+            }
+
+            .logo-box {
+                margin-bottom: 25px;
+            }
+
+            .logo-box img {
+                height: 120px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .subtitle {
+                font-size: 14px;
+                margin-bottom: 20px;
+            }
+
+            .nsl-tab-btn {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
+
 <body class="bg-pattern">
     <div class="login-page-container">
         <!-- WAVY HEADER: NSL Brand (German Flag) -->
@@ -119,61 +164,72 @@
         <div class="login-content">
             <div class="login-form-box">
                 <div class="logo-box">
-                    <img src="/logo.png" alt="NSL">
+                    <img src="/logo-shadow.png" alt="NSL">
                 </div>
-                
+
                 <h1>Portal Access</h1>
                 <p class="subtitle">Select your role to sign in</p>
 
-                <% if (typeof error !== 'undefined' && error) { %>
-                    <div class="error-msg"><%= error %></div>
-                <% } %>
+                <% if (typeof error !=='undefined' && error) { %>
+                    <div class="error-msg">
+                        <%= error %>
+                    </div>
+                    <% } %>
 
-                <div class="nsl-tabs">
-                    <button class="nsl-tab-btn" onclick="switchTab('student')">Student</button>
-                    <button class="nsl-tab-btn" onclick="switchTab('partner')">Partner</button>
-                    <button class="nsl-tab-btn" onclick="switchTab('admin')">Admin</button>
-                </div>
-
-                <!-- STUDENT FORM -->
-                <div id="tab-student" class="tab-content">
-                    <form action="/login" method="POST">
-                        <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
-                        <div class="form-group text-left">
-                            <label class="form-label">Student ID</label>
-                            <input type="text" name="studentId" class="form-control" placeholder="e.g. HDEU_Tam_HUYNH_06.01.2004" required>
+                        <div class="nsl-tabs">
+                            <button class="nsl-tab-btn" onclick="switchTab('student')">Student</button>
+                            <button class="nsl-tab-btn" onclick="switchTab('partner')">Partner</button>
+                            <button class="nsl-tab-btn" onclick="switchTab('admin')">Admin</button>
                         </div>
-                        <button type="submit" id="btn-student" class="btn-submit-brutal">Student Login</button>
-                    </form>
-                </div>
 
-                <!-- PARTNER FORM -->
-                <div id="tab-partner" class="tab-content">
-                    <form action="/partner/login" method="POST">
-                        <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
-                        <div class="form-group text-left">
-                            <label class="form-label">Access Code</label>
-                            <input type="password" name="accessCode" class="form-control" placeholder="Enter your partner code" required>
+                        <!-- STUDENT FORM -->
+                        <div id="tab-student" class="tab-content">
+                            <form action="/login" method="POST">
+                                <input type="hidden" name="_csrf"
+                                    value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+                                <div class="form-group text-left">
+                                    <label class="form-label">Student ID</label>
+                                    <input type="text" name="studentId" class="form-control"
+                                        placeholder="e.g. HDEU_Tam_HUYNH_06.01.2004" required>
+                                </div>
+                                <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA" style="margin-top: 10px;"></div>
+                                <button type="submit" id="btn-student" class="btn-submit-brutal">Student Login</button>
+                            </form>
                         </div>
-                        <button type="submit" id="btn-partner" class="btn-submit-brutal">Partner Login</button>
-                    </form>
-                </div>
 
-                <!-- ADMIN FORM -->
-                <div id="tab-admin" class="tab-content">
-                    <form action="/admin/login" method="POST">
-                        <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
-                        <div class="form-group text-left">
-                            <label class="form-label">Password</label>
-                            <input type="password" name="password" class="form-control" placeholder="Enter admin password" required>
+                        <!-- PARTNER FORM -->
+                        <div id="tab-partner" class="tab-content">
+                            <form action="/partner/login" method="POST">
+                                <input type="hidden" name="_csrf"
+                                    value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+                                <div class="form-group text-left">
+                                    <label class="form-label">Access Code</label>
+                                    <input type="password" name="accessCode" class="form-control"
+                                        placeholder="Enter your partner code" required>
+                                </div>
+                                <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA" style="margin-top: 10px;"></div>
+                                <button type="submit" id="btn-partner" class="btn-submit-brutal">Partner Login</button>
+                            </form>
                         </div>
-                        <button type="submit" id="btn-admin" class="btn-submit-brutal">Admin Login</button>
-                    </form>
-                </div>
 
-                <div class="footer-text-bottom">
-                    &copy; <%= new Date().getFullYear() %> NSL. All rights reserved.
-                </div>
+                        <!-- ADMIN FORM -->
+                        <div id="tab-admin" class="tab-content">
+                            <form action="/admin/login" method="POST">
+                                <input type="hidden" name="_csrf"
+                                    value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+                                <div class="form-group text-left">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" name="password" class="form-control"
+                                        placeholder="Enter admin password" required>
+                                </div>
+                                <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA" style="margin-top: 10px;"></div>
+                                <button type="submit" id="btn-admin" class="btn-submit-brutal">Admin Login</button>
+                            </form>
+                        </div>
+
+                        <div class="footer-text-bottom">
+                            &copy; <%= new Date().getFullYear() %> NSL. All rights reserved.
+                        </div>
             </div>
         </div>
     </div>
@@ -183,10 +239,10 @@
             // Remove active classes
             document.querySelectorAll('.nsl-tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
+
             // Add active class to corresponding tab and button
             document.getElementById('tab-' + tabId).classList.add('active');
-            
+
             // Map tabId to button index
             const index = ['student', 'partner', 'admin'].indexOf(tabId);
             if (index !== -1) {
@@ -203,8 +259,9 @@
         const serverTab = "<%= typeof tab !== 'undefined' ? tab : '' %>";
         const urlParams = new URLSearchParams(window.location.search);
         const activeTab = serverTab || urlParams.get('tab') || 'student';
-        
+
         switchTab(activeTab);
     </script>
 </body>
+
 </html>

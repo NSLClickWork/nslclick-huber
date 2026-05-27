@@ -1,11 +1,33 @@
 const { google } = require('googleapis');
 const { serviceAccountClient } = require('./googleAuth');
+const fs = require('fs');
+const path = require('path');
 
 // Default Database Config
-const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID || '1mMfpTipZ8w9LpnebDlc1qC7pkNoX3NafhGXdUeJjyH4'; // Fallback to their exact ID
-const MASTER_SHEET = 'CHECKLIST'; // Tên tab thực tế trong Google Sheets
+const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID; // Must be set in .env
+const MASTER_SHEET = 'CHECKLIST';
 const ASSESS_SHEET = 'NSL-ASSESS';
-const PARTNER_SHEET = 'PARTNER_ACCESS';  // Tên tab chứa danh sách mã đăng nhập của doanh nghiệp
+const PARTNER_SHEET = 'PARTNER_ACCESS';
+
+// Mock Mode Helper
+const isMockMode = process.env.USE_MOCK_DATA === 'true' || !SPREADSHEET_ID;
+const mockDbPath = path.join(__dirname, '../data/mock_db.json');
+
+function readMockDb() {
+    try {
+        if (fs.existsSync(mockDbPath)) {
+            const raw = fs.readFileSync(mockDbPath, 'utf8');
+            return JSON.parse(raw);
+        }
+    } catch (e) {
+        console.error('Error reading mock_db.json:', e);
+    }
+    return { students: [], partners: [] };
+}
+
+function writeMockDb(data) {
+    fs.writeFileSync(mockDbPath, JSON.stringify(data, null, 4), 'utf8');
+}
 
 async function getSheetsInstance() {
     if (!serviceAccountClient) {
@@ -16,12 +38,14 @@ async function getSheetsInstance() {
 
 let cachedStudents = null;
 let lastCacheTime = 0;
-const CACHE_TTL = 30000; // 30 seconds
+const CACHE_TTL = 30000;
 
-/**
- * Lấy tất cả thông tin học viên từ Master Sheet
- */
 async function getAllStudents() {
+    if (isMockMode) {
+        const db = readMockDb();
+        return db.students || [];
+    }
+
     if (!SPREADSHEET_ID) return [];
     
     if (cachedStudents && Date.now() - lastCacheTime < CACHE_TTL) {
@@ -163,6 +187,11 @@ async function getAllStudents() {
  * Lấy danh sách Partner Access
  */
 async function getPartnerAccessConfigs() {
+    if (isMockMode) {
+        const db = readMockDb();
+        return db.partners || [];
+    }
+
     if (!SPREADSHEET_ID) return [];
     
     try {
@@ -230,6 +259,15 @@ function colIndexToA1(index) {
  * Cập nhật một số trường cho học viên dựa vào StudentID
  */
 async function updateStudentFields(studentId, updates) {
+    if (isMockMode) {
+        const db = readMockDb();
+        const student = db.students.find(s => s.StudentID === studentId);
+        if (!student) throw new Error('Student not found in mock db');
+        Object.assign(student, updates);
+        writeMockDb(db);
+        return true;
+    }
+
     const students = await getAllStudents();
     const student = students.find(s => s.StudentID === studentId);
     if (!student) throw new Error('Student not found');
@@ -302,6 +340,15 @@ async function addStudent(studentData) {
     if (!studentData.StudentID) {
         studentData.StudentID = 'NSL-' + Date.now().toString().substring(5);
     }
+    
+    if (isMockMode) {
+        const db = readMockDb();
+        studentData.rowIndex = db.students.length > 0 ? Math.max(...db.students.map(s => s.rowIndex || 0)) + 1 : 2;
+        db.students.push(studentData);
+        writeMockDb(db);
+        return true;
+    }
+
     const sheets = await getSheetsInstance();
     const headerResponse = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
@@ -327,6 +374,14 @@ async function addStudent(studentData) {
  * Thêm đối tác mới
  */
 async function addPartnerAccess(partnerConfig) {
+    if (isMockMode) {
+        const db = readMockDb();
+        partnerConfig.rowIndex = db.partners.length > 0 ? Math.max(...db.partners.map(p => p.rowIndex || 0)) + 1 : 2;
+        db.partners.push(partnerConfig);
+        writeMockDb(db);
+        return true;
+    }
+
     const sheets = await getSheetsInstance();
     const headerResponse = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
@@ -336,7 +391,16 @@ async function addPartnerAccess(partnerConfig) {
     let headers = headerResponse.data.values ? headerResponse.data.values[0] : [];
     if (headers.length === 0) {
         // If sheet is empty, create headers
-        headers = ['partnerName', 'codeHash', 'allowedProfessions', 'allowedCenters', 'expiresAt', 'revoked'];
+        headers = ['partnerName', 'codeHash', 'accessCode', 'allowedProfessions', 'allowedCenters', 'expiresAt', 'revoked'];
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${PARTNER_SHEET}!A1:Z1`,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: { values: [headers] }
+        });
+    } else if (!headers.includes('accessCode')) {
+        // If accessCode column doesn't exist, append it to headers
+        headers.push('accessCode');
         await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
             range: `${PARTNER_SHEET}!A1:Z1`,
@@ -363,6 +427,15 @@ async function addPartnerAccess(partnerConfig) {
  * Cập nhật thông tin đối tác
  */
 async function updatePartnerAccess(rowIndex, updates) {
+    if (isMockMode) {
+        const db = readMockDb();
+        const partner = db.partners.find(p => p.rowIndex == rowIndex);
+        if (!partner) throw new Error('Partner not found in mock db');
+        Object.assign(partner, updates);
+        writeMockDb(db);
+        return true;
+    }
+
     const sheets = await getSheetsInstance();
     const headerResponse = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,

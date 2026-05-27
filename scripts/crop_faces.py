@@ -5,7 +5,7 @@ import urllib.request
 import numpy as np
 
 # Download haarcascade if not exists
-cascade_path = 'haarcascade_frontalface_default.xml'
+cascade_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'haarcascade_frontalface_default.xml')
 if not os.path.exists(cascade_path):
     url = 'https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_default.xml'
     urllib.request.urlretrieve(url, cascade_path)

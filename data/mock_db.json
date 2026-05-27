@@ -1,0 +1,56 @@
+{
+    "students": [
+        {
+            "StudentID": "NSL-DEMO-01",
+            "FullName": "Nguyễn Văn Demo",
+            "DOB": "01.01.2000",
+            "ProfessionCode": "IT, HDEU",
+            "CenterCode": "NSL",
+            "Status": "ACTIVE",
+            "NSLScore": 92,
+            "NSLGrade": "A",
+            "DeutschLevel": "B2",
+            "Intake": "Winter 2024",
+            "Strength1": "Hardworking",
+            "Strength2": "Fast Learner",
+            "Strength3": "Team Player",
+            "PhotoLink": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300",
+            "ActivityPhotoLink": "https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=300",
+            "YouTubeLink": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "SetcardLink": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+            "rowIndex": 2
+        },
+        {
+            "StudentID": "NSL-DEMO-02",
+            "FullName": "Trần Thị Test",
+            "DOB": "15.06.2002",
+            "ProfessionCode": "NURSING",
+            "CenterCode": "HCM",
+            "Status": "ACTIVE",
+            "NSLScore": 75,
+            "NSLGrade": "B",
+            "DeutschLevel": "B1",
+            "Intake": "Summer 2024",
+            "Strength1": "Caring",
+            "Strength2": "Patient",
+            "Strength3": "Detail-oriented",
+            "PhotoLink": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300",
+            "ActivityPhotoLink": "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=300",
+            "YouTubeLink": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "SetcardLink": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+            "rowIndex": 3
+        }
+    ],
+    "partners": [
+        {
+            "partnerName": "Demo Partner Corp",
+            "accessCode": "partner123",
+            "codeHash": "$2b$10$wT0o3Fk5WnE5F7y8K4wJ4u3lK5j1WfL4hP0s9d2vGq3s7a5j8d4lK", 
+            "allowedProfessions": "*",
+            "allowedCenters": "*",
+            "expiresAt": "",
+            "revoked": "FALSE",
+            "rowIndex": 2
+        }
+    ]
+}
