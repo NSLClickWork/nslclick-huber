@@ -7,7 +7,21 @@ require('dotenv').config();
 let serviceAccountClient = null;
 const credsPath = path.join(__dirname, '../credentials.json');
 
-if (fs.existsSync(credsPath)) {
+if (process.env.GOOGLE_CREDENTIALS_JSON) {
+    try {
+        const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+        serviceAccountClient = new google.auth.GoogleAuth({
+            credentials,
+            scopes: [
+                'https://www.googleapis.com/auth/spreadsheets',
+                'https://www.googleapis.com/auth/drive',
+                'https://www.googleapis.com/auth/drive.file'
+            ]
+        });
+    } catch (err) {
+        console.error('Error parsing GOOGLE_CREDENTIALS_JSON:', err);
+    }
+} else if (fs.existsSync(credsPath)) {
     serviceAccountClient = new google.auth.GoogleAuth({
         keyFile: credsPath,
         scopes: [
@@ -17,7 +31,7 @@ if (fs.existsSync(credsPath)) {
         ]
     });
 } else {
-    console.warn('Warning: credentials.json not found. Service Account features will not work.');
+    console.warn('Warning: credentials.json or GOOGLE_CREDENTIALS_JSON not found. Service Account features will not work.');
 }
 
 // 2. OAuth2 Client (For YouTube Uploads - requires real user context)
@@ -28,7 +42,14 @@ const oauth2Client = new google.auth.OAuth2(
 );
 
 const tokenPath = path.join(__dirname, '../token.json');
-if (fs.existsSync(tokenPath)) {
+if (process.env.GOOGLE_YOUTUBE_TOKEN_JSON) {
+    try {
+        const token = JSON.parse(process.env.GOOGLE_YOUTUBE_TOKEN_JSON);
+        oauth2Client.setCredentials(token);
+    } catch (err) {
+        console.error('Error parsing GOOGLE_YOUTUBE_TOKEN_JSON:', err);
+    }
+} else if (fs.existsSync(tokenPath)) {
     try {
         const tokenStr = fs.readFileSync(tokenPath, 'utf8');
         const token = JSON.parse(tokenStr);
