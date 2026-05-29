@@ -106,6 +106,7 @@
                         <option value="MEC">Mechaniker/in</option>
                         <option value="KOC">Koch/Köchin</option>
                         <option value="HOT">Hotelfachmann</option>
+                        <option value="EINZ">Einzelhandel</option>
                     </select>
                     <input type="text" id="adminStudentSearch" class="form-control" placeholder="Search students..." style="flex-grow: 1; max-width: 300px; padding: 8px 15px;" oninput="renderTable()">
                 </div>
@@ -203,7 +204,7 @@
                         <label><input type="checkbox" name="prof" value="HDEU, Pflege, Nursing, Điều dưỡng" data-short="NURSING" onchange="updateAutoCode()"> <%= __('admin_prof_nursing') %></label>
                         <label><input type="checkbox" name="prof" value="KOC, HOT, Koch, Hotel, Restaurant, Gastronomie, Đầu bếp, Ẩm thực, NHKS" data-short="NHKS" onchange="updateAutoCode()"> <%= __('admin_prof_nhks') %></label>
                         <label><input type="checkbox" name="prof" value="MEC, Mechatroniker, Mechaniker, IT, Kỹ thuật, Cơ khí" data-short="TECH" onchange="updateAutoCode()"> <%= __('admin_prof_tech') %></label>
-                        <label><input type="checkbox" name="prof" value="Bán hàng, Bán bánh, Verkäufer, Bäckerei, Retail, Sales, Dịch vụ" data-short="SALES" onchange="updateAutoCode()"> <%= __('admin_prof_sales') %></label>
+                        <label><input type="checkbox" name="prof" value="EINZ, Einzelhandel, Bán hàng, Bán bánh, Verkäufer, Bäckerei, Retail, Sales, Dịch vụ" data-short="SALES" onchange="updateAutoCode()"> <%= __('admin_prof_sales') %></label>
                         <label><input type="checkbox" name="prof" value="ZfA, Nha khoa, Zahnmedizinische" data-short="ZfA" onchange="updateAutoCode()"> <%= __('admin_prof_zfa') %></label>
                     </div>
                     <small style="color: #666; font-size: 11px; display: block; margin-top: 8px;">

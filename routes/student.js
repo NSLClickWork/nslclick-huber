@@ -61,11 +61,7 @@ function proxyStudentPhoto(photoField, options = {}) {
         }
 
         try {
-            const drive = google.drive({ version: 'v3', auth: serviceAccountClient });
-            
-            const response = await drive.files.get({ fileId: photoDriveId, alt: 'media' }, { responseType: 'stream' });
-            res.setHeader('Content-Type', 'image/jpeg');
-            response.data.pipe(res);
+            res.redirect(`https://drive.google.com/uc?export=view&id=${photoDriveId}`);
         } catch (err) {
             console.error(`${photoField} proxy error:`, err.message);
             res.status(500).send('Error');

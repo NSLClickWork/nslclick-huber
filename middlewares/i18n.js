@@ -5,7 +5,8 @@ const dictionary = {
             'mechaniker': 'Thợ cơ khí',
             'koch': 'Đầu bếp',
             'hotel': 'Nhà hàng Khách sạn',
-            'it': 'Công nghệ thông tin'
+            'it': 'Công nghệ thông tin',
+            'einzelhandel': 'Bán hàng / Bán lẻ'
         },
         labels: {
             search: 'Tìm kiếm',
@@ -53,7 +54,8 @@ const dictionary = {
             'mechaniker': 'Mechanic',
             'koch': 'Chef / Cook',
             'hotel': 'Hospitality',
-            'it': 'IT Specialist'
+            'it': 'IT Specialist',
+            'einzelhandel': 'Retail / Sales'
         },
         labels: {
             search: 'Search',
@@ -101,7 +103,8 @@ const dictionary = {
             'mechaniker': 'Mechaniker/in',
             'koch': 'Koch/Köchin',
             'hotel': 'Hotelfachmann/-frau',
-            'it': 'IT-Fachkraft'
+            'it': 'IT-Fachkraft',
+            'einzelhandel': 'Einzelhandel / Verkauf'
         },
         labels: {
             search: 'Suche',
