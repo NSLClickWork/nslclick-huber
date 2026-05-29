@@ -84,6 +84,7 @@ async function getAllStudents() {
             if (key.toLowerCase() === 'superpower 3' || key.toLowerCase() === 'strength 3') return 'Strength3';
             if (key.toLowerCase() === 'candidate cards' || key.toLowerCase() === 'setcard') return 'SetcardLink';
             if (key.toLowerCase() === 'skill centre - video recording' || key.toLowerCase() === 'raw video link' || key.toLowerCase() === 'rawvideolink') return 'RawVideoLink';
+            if (key.toLowerCase() === 'progress status' || key.toLowerCase() === 'progressstatus') return 'ProgressStatus';
             return key;
         });
 
@@ -277,9 +278,12 @@ async function updateStudentFields(studentId, updates) {
     // Lấy lại header để map cột
     const headerResponse = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${MASTER_SHEET}!1:1`,
+        range: `${MASTER_SHEET}!1:10`,
     });
-    const headers = headerResponse.data.values[0];
+    const rows = headerResponse.data.values || [];
+    let headerIndex = rows.findIndex(row => row.some(cell => cell && cell.trim().toLowerCase().replace(/\s/g, '') === 'studentid'));
+    if (headerIndex === -1) headerIndex = 0;
+    const headers = rows[headerIndex] || [];
 
     const reverseMap = {
         FullName: ['Student Name', 'FullName'],
@@ -293,7 +297,8 @@ async function updateStudentFields(studentId, updates) {
         Strength2: ['Superpower 2', 'Strength 2'],
         Strength3: ['Superpower 3', 'Strength 3'],
         SetcardLink: ['Candidate Cards', 'Setcard', 'SetcardLink'],
-        RawVideoLink: ['Skill Centre - Video Recording', 'Raw Video Link', 'RawVideoLink']
+        RawVideoLink: ['Skill Centre - Video Recording', 'Raw Video Link', 'RawVideoLink'],
+        ProgressStatus: ['Progress Status', 'ProgressStatus']
     };
 
     const data = [];
@@ -324,13 +329,15 @@ async function updateStudentFields(studentId, updates) {
                     data: data
                 }
             });
+            cachedStudents = null; // Clear cache
             return true;
         } catch (error) {
             console.error('Error updating Google Sheets:', error);
             throw error;
         }
     }
-    return false;
+    
+    throw new Error(`Column not found in Google Sheets for updates: ${Object.keys(updates).join(', ')}. Did you forget to add the 'Progress Status' column?`);
 }
 
 /**
@@ -468,10 +475,103 @@ async function updatePartnerAccess(rowIndex, updates) {
     return false;
 }
 
+/**
+ * Cập nhật nhiều học viên cùng lúc
+ */
+async function batchUpdateStudentsFields(studentIds, updates) {
+    if (!studentIds || studentIds.length === 0) return false;
+    
+    if (isMockMode) {
+        const db = readMockDb();
+        let changed = false;
+        db.students.forEach(s => {
+            if (studentIds.includes(s.StudentID)) {
+                Object.assign(s, updates);
+                changed = true;
+            }
+        });
+        if (changed) writeMockDb(db);
+        return true;
+    }
+
+    const students = await getAllStudents();
+    const sheets = await getSheetsInstance();
+    
+    const headerResponse = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${MASTER_SHEET}!1:10`,
+    });
+    const rows = headerResponse.data.values || [];
+    let headerIndex = rows.findIndex(row => row.some(cell => cell && cell.trim().toLowerCase().replace(/\s/g, '') === 'studentid'));
+    if (headerIndex === -1) headerIndex = 0;
+    const headers = rows[headerIndex] || [];
+
+    const reverseMap = {
+        FullName: ['Student Name', 'FullName'],
+        StudentID: ['Student ID', 'StudentID'],
+        PhotoLink: ['Photo', 'Photo Link'],
+        ActivityPhotoLink: ['Activity Photo', 'Activity Photo Link'],
+        YouTubeLink: ['Introduction Video', 'YouTube Link'],
+        AvailableFrom: ['Availability', 'Available From'],
+        CenterCode: ['Language School', 'Center Code'],
+        Strength1: ['Superpower 1', 'Strength 1'],
+        Strength2: ['Superpower 2', 'Strength 2'],
+        Strength3: ['Superpower 3', 'Strength 3'],
+        SetcardLink: ['Candidate Cards', 'Setcard', 'SetcardLink'],
+        RawVideoLink: ['Skill Centre - Video Recording', 'Raw Video Link', 'RawVideoLink'],
+        ProgressStatus: ['Progress Status', 'ProgressStatus']
+    };
+
+    const data = [];
+    
+    for (const studentId of studentIds) {
+        const student = students.find(s => s.StudentID === studentId);
+        if (!student) continue;
+
+        for (const [key, value] of Object.entries(updates)) {
+            let colIndex = headers.indexOf(key);
+            if (colIndex === -1) {
+                colIndex = headers.findIndex(h => {
+                    const hLower = h.trim().toLowerCase();
+                    return (reverseMap[key] && reverseMap[key].some(m => m.toLowerCase() === hLower));
+                });
+            }
+            
+            if (colIndex !== -1) {
+                const colLetter = colIndexToA1(colIndex);
+                data.push({
+                    range: `${MASTER_SHEET}!${colLetter}${student.rowIndex}`,
+                    values: [[value]]
+                });
+            }
+        }
+    }
+
+    if (data.length > 0) {
+        try {
+            await sheets.spreadsheets.values.batchUpdate({
+                spreadsheetId: SPREADSHEET_ID,
+                requestBody: {
+                    valueInputOption: 'USER_ENTERED',
+                    data: data
+                }
+            });
+            cachedStudents = null; // Clear cache
+            return true;
+        } catch (error) {
+            console.error('Error updating Google Sheets in batch:', error);
+            throw error;
+        }
+    }
+    
+    throw new Error(`Column not found in Google Sheets for updates: ${Object.keys(updates).join(', ')}. Please make sure you added the 'Progress Status' column in your Google Sheet!`);
+}
+
 module.exports = {
     getAllStudents,
     getStudentById,
     updateStudentFields,
+    batchUpdateStudentsFields,
     addStudent,
     addPartnerAccess,
     updatePartnerAccess,

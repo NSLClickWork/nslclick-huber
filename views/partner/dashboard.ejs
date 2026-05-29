@@ -106,21 +106,21 @@
 
             <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                 <span id="studentCount" style="font-weight: bold; background: var(--text-main); color: #fff; padding: 5px 12px; border-radius: var(--radius-pill); font-size: 14px;"><%= students ? students.length : 0 %> Candidates</span>
-                <select id="sortFilter" class="form-control" style="max-width: 170px; padding: 8px 15px; font-size: 14px;" onchange="filterStudents()">
+                <select id="sortFilter" class="form-control" style="max-width: 170px; padding: 8px 15px; font-size: 14px;" onchange="currentPage=1; filterStudents()">
                     <option value="DEFAULT">Default Sort</option>
                     <option value="SCORE_DESC">Highest Score</option>
                     <option value="NAME_ASC">Name (A-Z)</option>
                     <option value="NAME_DESC">Name (Z-A)</option>
                     <option value="HAS_VIDEO">Has Video Only</option>
                 </select>
-                <select id="professionFilter" class="form-control" style="max-width: 170px; padding: 8px 15px; font-size: 14px;" onchange="filterStudents()">
+                <select id="professionFilter" class="form-control" style="max-width: 170px; padding: 8px 15px; font-size: 14px;" onchange="currentPage=1; filterStudents()">
                     <option value="ALL">All Professions</option>
                     <option value="HDEU"><%= __('professions')['pflege'] %></option>
                     <option value="MEC"><%= __('professions')['mechaniker'] %></option>
                     <option value="KOC"><%= __('professions')['koch'] %></option>
                     <option value="HOT"><%= __('professions')['hotel'] %></option>
                 </select>
-                <input type="text" id="searchInput" class="form-control" placeholder="<%= __('search') %>..." style="flex-grow: 1; max-width: 300px; padding: 8px 15px; font-size: 14px;" onkeyup="filterStudents()">
+                <input type="text" id="searchInput" class="form-control" placeholder="<%= __('search') %>..." style="flex-grow: 1; max-width: 300px; padding: 8px 15px; font-size: 14px;" onkeyup="currentPage=1; filterStudents()">
             </div>
         </div>
         
@@ -199,12 +199,31 @@
                 <p>No candidates available for your selected criteria.</p>
             <% } %>
         </div>
+        <div id="paginationContainer" style="display: flex; justify-content: center; gap: 10px; margin-top: 30px; margin-bottom: 20px; flex-wrap: wrap;"></div>
     </div>
     <script>
         let currentRankFilter = 'ALL';
+        let currentPage = 1;
+        let itemsPerPage = window.innerWidth <= 768 ? 10 : 20;
+
+        window.addEventListener('resize', () => {
+            let newItemsPerPage = window.innerWidth <= 768 ? 10 : 20;
+            if (newItemsPerPage !== itemsPerPage) {
+                itemsPerPage = newItemsPerPage;
+                currentPage = 1;
+                filterStudents();
+            }
+        });
+
+        function changePage(page) {
+            currentPage = page;
+            filterStudents();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
         function filterByRank(rank, btn) {
             currentRankFilter = rank;
+            currentPage = 1;
             
             // Update active state of buttons
             const buttons = document.getElementById('rankTabs').getElementsByTagName('button');
@@ -227,7 +246,8 @@
             const grid = document.getElementById('studentsGrid');
             if (!grid) return;
             let cards = Array.from(grid.getElementsByClassName('nsl-grid-card'));
-            let count = 0;
+            
+            let filteredCards = [];
             
             for (let i = 0; i < cards.length; i++) {
                 const card = cards[i];
@@ -242,28 +262,71 @@
                 const matchesVideo = sortFilter !== 'HAS_VIDEO' || cardHasVideo === 'true';
 
                 if (matchesSearch && matchesRank && matchesProf && matchesVideo) {
-                    card.style.display = '';
-                    count++;
+                    filteredCards.push(card);
                 } else {
                     card.style.display = 'none';
                 }
             }
             
             if (sortFilter === 'SCORE_DESC') {
-                cards.sort((a, b) => parseFloat(b.getAttribute('data-score') || 0) - parseFloat(a.getAttribute('data-score') || 0));
+                filteredCards.sort((a, b) => parseFloat(b.getAttribute('data-score') || 0) - parseFloat(a.getAttribute('data-score') || 0));
             } else if (sortFilter === 'NAME_ASC') {
-                cards.sort((a, b) => a.getAttribute('data-name').localeCompare(b.getAttribute('data-name')));
+                filteredCards.sort((a, b) => a.getAttribute('data-name').localeCompare(b.getAttribute('data-name')));
             } else if (sortFilter === 'NAME_DESC') {
-                cards.sort((a, b) => b.getAttribute('data-name').localeCompare(a.getAttribute('data-name')));
+                filteredCards.sort((a, b) => b.getAttribute('data-name').localeCompare(a.getAttribute('data-name')));
             } else {
-                cards.sort((a, b) => parseInt(a.getAttribute('data-index') || 0) - parseInt(b.getAttribute('data-index') || 0));
+                filteredCards.sort((a, b) => parseInt(a.getAttribute('data-index') || 0) - parseInt(b.getAttribute('data-index') || 0));
             }
             
             cards.forEach(card => grid.appendChild(card));
             
+            const totalItems = filteredCards.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+            
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+
+            filteredCards.forEach((card, index) => {
+                if (index >= startIndex && index < endIndex) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
             const countBadge = document.getElementById('studentCount');
             if (countBadge) {
-                countBadge.innerText = count + ' Candidates';
+                countBadge.innerText = totalItems + ' Candidates';
+            }
+
+            renderPagination(totalPages);
+        }
+
+        function renderPagination(totalPages) {
+            let container = document.getElementById('paginationContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            if (totalPages <= 1) return;
+
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'btn-nsl-brutal';
+                btn.innerText = i;
+                btn.style.padding = '8px 12px';
+                if (i === currentPage) {
+                    btn.style.background = 'var(--text-main)';
+                    btn.style.color = '#fff';
+                } else {
+                    btn.style.background = 'transparent';
+                    btn.style.color = 'var(--text-main)';
+                }
+                btn.onclick = () => changePage(i);
+                container.appendChild(btn);
             }
         }
     </script>

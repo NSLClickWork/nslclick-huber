@@ -70,12 +70,13 @@ async function processPdfJob(task) {
         await page.setContent(html, { waitUntil: 'networkidle0' });
         
         pdfPath = path.join(__dirname, `../public/uploads/${studentId}-setcard.pdf`);
-        await page.pdf({ path: pdfPath, format: 'A4', printBackground: true });
+        await page.pdf({ path: pdfPath, format: 'A4', printBackground: true, landscape: true });
 
-        // 5. Upload to Drive
+        // 5. Save locally instead of Drive
         jobsService.updateJobStatus(jobId, 'uploading');
-        const fileName = `Setcard_${student.FullName.replace(/\s+/g, '_')}_${studentId}.pdf`;
-        const driveLink = await driveService.uploadToDrive(pdfPath, fileName, 'application/pdf');
+        const fileName = `${studentId}-setcard.pdf`;
+        const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+        const driveLink = `${baseUrl}/uploads/${fileName}`;
 
         // 6. Write status back to Google Sheets
         await sheetsService.updateStudentFields(studentId, {
@@ -104,7 +105,7 @@ async function processPdfJob(task) {
     } finally {
         if (browser) await browser.close();
         // 7. Cleanup temp files MUST be in finally block
-        if (pdfPath && fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);
+        // Do NOT delete the PDF, because we serve it locally!
         if (photoLocalPath && fs.existsSync(photoLocalPath)) fs.unlinkSync(photoLocalPath);
     }
 }

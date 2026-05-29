@@ -70,7 +70,7 @@ router.put('/admin/students/:id', isAdmin, async (req, res) => {
         const allowedFields = [
             'FullName', 'Phone', 'CCCD', 'VoucherCode', 'ProfessionCode', 
             'CenterCode', 'DeutschLevel', 'Strength1', 'Strength2', 'Strength3', 
-            'AvailableFrom', 'AssessmentScore', 'VideoScore', 'PhotoLink', 'RawVideoLink'
+            'AvailableFrom', 'AssessmentScore', 'VideoScore', 'PhotoLink', 'RawVideoLink', 'ProgressStatus'
         ];
         
         const updates = {};
@@ -176,6 +176,20 @@ router.post('/admin/batch/videos', isAdmin, async (req, res) => {
 
     const queuedJobs = studentIds.map(id => videoService.enqueueVideoJob(id, type || 'vertical'));
     res.json({ message: 'Jobs queued successfully', jobs: queuedJobs });
+});
+
+router.post('/admin/batch/progress', isAdmin, async (req, res) => {
+    const { studentIds, newStatus } = req.body;
+    if (!studentIds || !Array.isArray(studentIds) || !newStatus) {
+        return res.status(400).json({ error: 'studentIds array and newStatus are required' });
+    }
+
+    try {
+        await sheetsService.batchUpdateStudentsFields(studentIds, { ProgressStatus: newStatus });
+        res.json({ success: true, message: 'Progress updated successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 router.get('/admin/jobs/:jobId', isAdmin, (req, res) => {

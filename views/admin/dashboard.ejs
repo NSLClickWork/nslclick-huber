@@ -65,19 +65,20 @@
         <img src="/logo-shadow.png" alt="NSL" class="nav-brand-logo">
         
         <div class="section-card" style="border: 4px solid var(--text-main); border-radius: 0; box-shadow: 8px 8px 0px var(--text-main);">
-            <div class="tabs" style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <div class="tabs" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
                 <button class="btn btn-nsl-brutal" id="tabStudents" style="background: var(--text-main); color: #fff;" onclick="switchTab('students')">Students</button>
                 <button class="btn btn-nsl-brutal" id="tabPartners" onclick="switchTab('partners')">Partners</button>
             </div>
 
-            <div class="section-title" id="pageTitle" style="color: var(--text-main); border-left: 8px solid var(--nsl-gold); padding-left: 15px;">Active Students</div>
+            <div class="section-title" id="pageTitle" style="color: var(--text-main); border-left: 8px solid var(--nsl-gold); padding-left: 15px;">Students</div>
             
             <div id="studentsView">
                 <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px;" id="actionButtons">
-                    <div style="display: flex; gap: 10px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
                         <button class="btn btn-nsl-brutal" onclick="showAddRow()" style="background: var(--text-main); color: #fff;">+ Add Student</button>
                         <button class="btn btn-nsl-brutal" onclick="batchGenerate('pdfs')" style="border-color: var(--nsl-red); color: var(--nsl-red);">Generate PDF</button>
                         <button class="btn btn-nsl-brutal" onclick="batchGenerate('videos')" style="border-color: var(--nsl-gold); color: var(--nsl-gold);">Generate Video</button>
+                        <button class="btn btn-nsl-brutal" onclick="batchUpdateProgress()" style="background: #2e7d32; color: #fff;">Batch Update Progress</button>
                     </div>
                 </div>
 
@@ -123,6 +124,7 @@
                                 <th>Full Name</th>
                                 <th>Profession</th>
                                 <th>Center</th>
+                                <th>Progress</th>
                                 <th>PDF Status</th>
                                 <th>Video Status</th>
                                 <th>Actions</th>
@@ -137,9 +139,9 @@
             <div id="partnersView" style="display: none;">
                 <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;">
                     <button class="btn btn-nsl-brutal" onclick="showCreatePartnerModal()" style="background: var(--text-main); color: #fff;">+ Generate Partner Code</button>
-                    <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+                    <div style="margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                         <span id="adminPartnerCount" style="font-weight: bold; background: var(--text-main); color: #fff; padding: 5px 12px; border-radius: var(--radius-pill); font-size: 14px;">0</span>
-                        <input type="text" id="adminPartnerSearch" class="form-control" placeholder="Search partners..." style="width: 250px; padding: 8px 15px;" oninput="renderPartnerTable()">
+                        <input type="text" id="adminPartnerSearch" class="form-control" placeholder="Search partners..." style="width: 250px; max-width: 100%; padding: 8px 15px;" oninput="renderPartnerTable()">
                     </div>
                 </div>
                 <div class="table-container" style="max-height: 600px; overflow-y: auto; border: 2px solid var(--text-main);">
@@ -160,37 +162,61 @@
         </div>
     </div>
 
+    <!-- BATCH PROGRESS MODAL -->
+    <div id="batchProgressModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: white; padding: 25px; border-radius: var(--radius-sm); border: 4px solid var(--nsl-red); max-width: 400px; width: 100%; box-shadow: 10px 10px 0px rgba(0,0,0,1);">
+            <h3 style="color: var(--text-main); margin-bottom: 5px; text-transform: uppercase; font-weight: 900;">Batch Update Progress</h3>
+            <p id="batchProgressCount" style="font-size: 14px; font-weight: bold; color: #666; margin-bottom: 20px;">Updating 0 students</p>
+            
+            <div class="edit-group">
+                <label style="font-weight: bold; margin-bottom: 8px; display: block;">Select New Step:</label>
+                <select id="batchProgressSelect" class="form-control" style="width: 100%; padding: 12px; font-size: 16px; border: 2px solid var(--text-main); border-radius: 4px; font-weight: bold;">
+                    <option value="1">1. Assessment Test</option>
+                    <option value="2">2. Interview</option>
+                    <option value="3">3. Media & Profile</option>
+                    <option value="4">4. Partner Matching</option>
+                    <option value="5">5. Contracting</option>
+                    <option value="6">6. Visa & Departure</option>
+                </select>
+            </div>
+            
+            <div style="margin-top: 25px; display: flex; gap: 10px;">
+                <button class="btn btn-nsl-brutal" style="background: #2e7d32; color: #fff; width: 100%;" onclick="submitBatchProgress()">Update All</button>
+                <button class="btn btn-nsl-brutal" style="background: #eee; color: #333;" onclick="document.getElementById('batchProgressModal').style.display='none'">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- PARTNER CREATION MODAL -->
     <div id="partnerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
         <div class="modal-content" style="background: white; padding: 20px; border-radius: var(--radius-sm); border: 4px solid var(--text-main); max-width: 500px; width: 100%;">
-            <h3>Generate Partner Code</h3>
+            <h3><%= __('admin_gen_partner_code') %></h3>
             <div id="p-Form">
                 <div class="edit-group" style="margin-top: 15px;">
-                    <label>Partner Name (Company)</label>
+                    <label><%= __('admin_partner_name') %></label>
                     <input id="p-Name" class="edit-input" placeholder="e.g. REWE" oninput="updateAutoCode()">
                 </div>
                 <div class="edit-group" style="margin-top: 15px;">
-                    <label>Allowed Professions</label>
+                    <label><%= __('admin_allowed_professions') %></label>
                     <div class="prof-tag-list">
-                        <label><input type="checkbox" name="prof" value="ALL" onchange="updateAutoCode()"> Tất cả (*)</label>
-                        <label><input type="checkbox" name="prof" value="Koch" onchange="updateAutoCode()"> Koch</label>
-                        <label><input type="checkbox" name="prof" value="Pflege" onchange="updateAutoCode()"> Pflege</label>
-                        <label><input type="checkbox" name="prof" value="ZfA" onchange="updateAutoCode()"> ZfA</label>
-                        <label><input type="checkbox" name="prof" value="Mechatroniker" onchange="updateAutoCode()"> Mechatroniker</label>
-                        <label><input type="checkbox" name="prof" value="Restaurantfachmann" onchange="updateAutoCode()"> Restaurantfachmann</label>
-                        <label><input type="checkbox" name="prof" value="HDEU" onchange="updateAutoCode()"> HDEU</label>
+                        <label><input type="checkbox" name="prof" value="ALL" data-short="ALL" onchange="updateAutoCode()"> <%= __('admin_prof_all') %></label>
+                        <label><input type="checkbox" name="prof" value="HDEU, Pflege, Nursing, Điều dưỡng" data-short="NURSING" onchange="updateAutoCode()"> <%= __('admin_prof_nursing') %></label>
+                        <label><input type="checkbox" name="prof" value="KOC, HOT, Koch, Hotel, Restaurant, Gastronomie, Đầu bếp, Ẩm thực, NHKS" data-short="NHKS" onchange="updateAutoCode()"> <%= __('admin_prof_nhks') %></label>
+                        <label><input type="checkbox" name="prof" value="MEC, Mechatroniker, Mechaniker, IT, Kỹ thuật, Cơ khí" data-short="TECH" onchange="updateAutoCode()"> <%= __('admin_prof_tech') %></label>
+                        <label><input type="checkbox" name="prof" value="Bán hàng, Bán bánh, Verkäufer, Bäckerei, Retail, Sales, Dịch vụ" data-short="SALES" onchange="updateAutoCode()"> <%= __('admin_prof_sales') %></label>
+                        <label><input type="checkbox" name="prof" value="ZfA, Nha khoa, Zahnmedizinische" data-short="ZfA" onchange="updateAutoCode()"> <%= __('admin_prof_zfa') %></label>
                     </div>
                     <small style="color: #666; font-size: 11px; display: block; margin-top: 8px;">
-                        * Hệ thống tự động tìm chuỗi: Nếu chọn <b>Pflege</b>, doanh nghiệp sẽ thấy được cả <b>Pflegefachkraft</b> hay bất kỳ nghề nào có chứa chữ Pflege.
+                        <%- __('admin_search_tip') %>
                     </small>
                 </div>
                 <div class="edit-group" style="margin-top: 15px;">
-                    <label>Raw Access Code (You can edit manually)</label>
+                    <label><%= __('admin_raw_access_code') %></label>
                     <input id="p-Code" class="edit-input" placeholder="Auto-generated...">
                 </div>
                 <div style="margin-top: 20px; display: flex; gap: 10px;">
-                    <button class="btn btn-nsl-brutal" style="background:var(--nsl-red); color:#fff;" onclick="submitPartner()">Generate & Save</button>
-                    <button class="btn btn-nsl-brutal" onclick="document.getElementById('partnerModal').style.display='none'">Cancel</button>
+                    <button class="btn btn-nsl-brutal" style="background:var(--nsl-red); color:#fff;" onclick="submitPartner()"><%= __('admin_generate_save') %></button>
+                    <button class="btn btn-nsl-brutal" onclick="document.getElementById('partnerModal').style.display='none'"><%= __('admin_cancel') %></button>
                 </div>
             </div>
             <div id="p-Result" style="margin-top: 15px; display: none; padding: 15px; background: #e8f5e9; border: 2px solid #2e7d32; border-radius: 4px;">
@@ -205,7 +231,6 @@
     <script>
         let allStudents = [];
         let allPartners = [];
-        let showingArchived = false;
         let activeJobs = [];
         
         function switchTab(tab) {
@@ -216,8 +241,7 @@
                 document.getElementById('tabStudents').style.color = '#fff';
                 document.getElementById('tabPartners').style.background = 'transparent';
                 document.getElementById('tabPartners').style.color = 'var(--text-main)';
-                document.getElementById('pageTitle').innerText = showingArchived ? 'Archived Students' : 'Active Students';
-                document.getElementById('toggleViewBtn').style.display = 'inline-block';
+                document.getElementById('pageTitle').innerText = 'Students';
             } else {
                 document.getElementById('studentsView').style.display = 'none';
                 document.getElementById('partnersView').style.display = 'block';
@@ -226,19 +250,16 @@
                 document.getElementById('tabStudents').style.background = 'transparent';
                 document.getElementById('tabStudents').style.color = 'var(--text-main)';
                 document.getElementById('pageTitle').innerText = 'Partner Management';
-                document.getElementById('toggleViewBtn').style.display = 'none';
                 fetchPartners();
             }
         }
 
-        // Wrapper for fetch to include CSRF automatically
         async function apiFetch(url, options = {}) {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
             options.headers = options.headers || {};
-            options.headers['CSRF-Token'] = csrfToken; // Fallback via Header (tiny-csrf might need body but usually checks headers too)
+            options.headers['CSRF-Token'] = csrfToken;
             
             if (options.body && typeof options.body !== 'string' && !(options.body instanceof FormData)) {
-                // If body is JSON object, inject _csrf
                 options.body._csrf = csrfToken;
                 options.body = JSON.stringify(options.body);
                 options.headers['Content-Type'] = 'application/json';
@@ -270,14 +291,6 @@
                  .replace(/>/g, "&gt;")
                  .replace(/"/g, "&quot;")
                  .replace(/'/g, "&#039;");
-        }
-
-        function toggleArchiveView() {
-            showingArchived = !showingArchived;
-            document.getElementById('toggleViewBtn').innerText = showingArchived ? 'View Active' : 'View Archived';
-            document.getElementById('pageTitle').innerText = showingArchived ? 'Archived Students' : 'Active Students';
-            document.getElementById('actionButtons').style.display = showingArchived ? 'none' : 'flex';
-            renderTable();
         }
 
         function getStatusBadge(status) {
@@ -314,7 +327,6 @@
             const sortMethod = (document.getElementById('adminSortFilter')?.value || 'DEFAULT');
             
             let filtered = allStudents.filter(s => {
-                if (showingArchived ? s.Status !== 'ARCHIVED' : s.Status === 'ARCHIVED') return false;
                 
                 const rank = s.NSLGrade ? s.NSLGrade.toUpperCase() : 'UNKNOWN';
                 if (adminCurrentRank !== 'ALL' && rank !== adminCurrentRank) return false;
@@ -342,20 +354,32 @@
             filtered.forEach(s => {
                 const tr = document.createElement('tr');
                 tr.id = `row-${escapeHtml(s.StudentID)}`;
+                let pdfBtn = s.SetcardLink ? `<a href="${escapeHtml(s.SetcardLink)}" target="_blank" class="btn btn-nsl-brutal" style="padding:4px 8px; font-size:11px; margin-right: 4px; border-color:var(--nsl-red); color:var(--nsl-red); text-decoration:none;">View PDF</a>` : '';
+                let videoLink = s.YouTubeLink || s.DriveVideoLink || '';
+                let videoBtn = (videoLink && videoLink.toUpperCase() !== 'FALSE') ? `<a href="${escapeHtml(videoLink)}" target="_blank" class="btn btn-nsl-brutal" style="padding:4px 8px; font-size:11px; margin-right: 4px; border-color:var(--nsl-gold); color:var(--nsl-gold); text-decoration:none;">View Video</a>` : '';
+                
                 tr.innerHTML = `
                     <td><input type="checkbox" class="student-cb" value="${escapeHtml(s.StudentID)}"></td>
                     <td><strong>${escapeHtml(s.StudentID)}</strong></td>
                     <td>${escapeHtml(s.FullName)}</td>
                     <td>${escapeHtml(s.ProfessionCode || '')}</td>
                     <td>${escapeHtml(s.CenterCode || '')}</td>
-                    <td>${getStatusBadge(escapeHtml(s.SetcardLink ? 'DONE' : s.SetcardStatus || 'PENDING'))}</td>
-                    <td>${getStatusBadge(escapeHtml(s.YouTubeLink ? 'DONE' : s.VideoStatus || 'PENDING'))}</td>
                     <td>
-                        ${showingArchived 
-                            ? `<button class="btn btn-nsl-brutal" style="padding:4px 8px; font-size:11px;" onclick="restoreStudent('${escapeHtml(s.StudentID)}')">Restore</button>`
-                            : `<button class="btn btn-nsl-brutal" style="padding:4px 8px; font-size:11px; margin-right: 4px;" onclick="toggleEdit('${escapeHtml(s.StudentID)}')">Edit</button>
-                               <button class="btn btn-nsl-brutal" style="padding:4px 8px; font-size:11px; color:#fff; background:var(--nsl-red); border-color:var(--nsl-red);" onclick="archiveStudent('${escapeHtml(s.StudentID)}')">Archive</button>`
-                        }
+                        <select onchange="updateProgressStatus('${escapeHtml(s.StudentID)}', this.value)" style="padding: 4px; font-size: 12px; border-radius: 4px; width: 100px;">
+                            <option value="1" ${s.ProgressStatus == '1' || !s.ProgressStatus ? 'selected' : ''}>1. Test</option>
+                            <option value="2" ${s.ProgressStatus == '2' ? 'selected' : ''}>2. Interview</option>
+                            <option value="3" ${s.ProgressStatus == '3' ? 'selected' : ''}>3. Media</option>
+                            <option value="4" ${s.ProgressStatus == '4' ? 'selected' : ''}>4. Matching</option>
+                            <option value="5" ${s.ProgressStatus == '5' ? 'selected' : ''}>5. Contract</option>
+                            <option value="6" ${s.ProgressStatus == '6' ? 'selected' : ''}>6. Visa</option>
+                        </select>
+                    </td>
+                    <td>${getStatusBadge(escapeHtml(s.SetcardLink ? 'DONE' : s.SetcardStatus || 'PENDING'))}</td>
+                    <td>${getStatusBadge(escapeHtml(videoLink ? 'DONE' : s.VideoStatus || 'PENDING'))}</td>
+                    <td>
+                        <button class="btn btn-nsl-brutal" style="padding:4px 8px; font-size:11px; margin-right: 4px;" onclick="toggleEdit('${escapeHtml(s.StudentID)}')">Edit</button>
+                        ${pdfBtn}
+                        ${videoBtn}
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -385,7 +409,73 @@
                     notify(data.error || 'Failed to queue', 'error');
                 }
             } catch (err) {
-                notify('Network error', 'error');
+                alert('Error fetching status');
+            }
+        }
+
+        async function updateProgressStatus(studentId, newStatus) {
+            try {
+                const res = await apiFetch(`/admin/students/${studentId}`, {
+                    method: 'PUT',
+                    body: { ProgressStatus: newStatus }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    notify(`Updated ${studentId} to Step ${newStatus}`);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                alert('Error saving status');
+            }
+        }
+
+        let batchSelectedIds = [];
+
+        function batchUpdateProgress() {
+            batchSelectedIds = Array.from(document.querySelectorAll('.student-cb:checked')).map(cb => cb.value);
+            if (batchSelectedIds.length === 0) {
+                notify('Please select at least one student first.', 'error');
+                return;
+            }
+            document.getElementById('batchProgressCount').innerText = `Updating ${batchSelectedIds.length} student(s)`;
+            document.getElementById('batchProgressModal').style.display = 'flex';
+        }
+
+        async function submitBatchProgress() {
+            const newStatus = document.getElementById('batchProgressSelect').value;
+            document.getElementById('batchProgressModal').style.display = 'none';
+            
+            notify(`Updating ${batchSelectedIds.length} students to Step ${newStatus}...`);
+            try {
+                const res = await apiFetch('/admin/batch/progress', {
+                    method: 'POST',
+                    body: { studentIds: batchSelectedIds, newStatus }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    notify(`Successfully updated ${batchSelectedIds.length} students to Step ${newStatus}!`);
+                    
+                    // Optimistic UI update
+                    batchSelectedIds.forEach(id => {
+                        const tr = document.getElementById(`row-${escapeHtml(id)}`);
+                        if (tr) {
+                            const select = tr.querySelector('select');
+                            if (select) select.value = newStatus;
+                            const cb = tr.querySelector('.student-cb');
+                            if (cb) cb.checked = false;
+                        }
+                        // Update local cache so filtering works
+                        const s = allStudents.find(x => x.StudentID === id);
+                        if (s) s.ProgressStatus = newStatus;
+                    });
+                    
+                    // fetchStudents(); // Optionally fetch in background, but optimistic is enough
+                } else {
+                    notify('Error: ' + data.error, 'error');
+                }
+            } catch (err) {
+                notify('Error updating batch progress', 'error');
             }
         }
 
@@ -466,16 +556,7 @@
             }
         }
 
-        async function archiveStudent(id) {
-            if (!confirm('Archive this student?')) return;
-            const res = await apiFetch(`/admin/students/${id}/archive`, { method: 'PUT', body: {} });
-            if (res.ok) { notify('Archived'); fetchStudents(); }
-        }
 
-        async function restoreStudent(id) {
-            const res = await apiFetch(`/admin/students/${id}/restore`, { method: 'PUT', body: {} });
-            if (res.ok) { notify('Restored'); fetchStudents(); }
-        }
 
         async function pollJobs() {
             if (activeJobs.length === 0) {
@@ -591,11 +672,11 @@
         function updateAutoCode() {
             const name = document.getElementById('p-Name').value.trim().toUpperCase().replace(/\s+/g, '_');
             const checkboxes = Array.from(document.querySelectorAll('input[name="prof"]:checked'));
-            const profsRaw = checkboxes.map(cb => cb.value);
+            const profsShort = checkboxes.map(cb => cb.dataset.short || cb.value);
             const year = new Date().getFullYear();
             
-            let profs = profsRaw.join('_');
-            if (profsRaw.length === 0 || profsRaw.includes('ALL')) {
+            let profs = profsShort.join('_');
+            if (profsShort.length === 0 || profsShort.includes('ALL')) {
                 profs = 'ALL';
             }
             
