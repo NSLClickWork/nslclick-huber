@@ -48,7 +48,8 @@ function proxyStudentPhoto(photoField, options = {}) {
             const allowedProfessions = partnerConfig.allowedProfessions ? partnerConfig.allowedProfessions.split(',').map(s => s.trim().toLowerCase()) : [];
             const allowedCenters = partnerConfig.allowedCenters ? partnerConfig.allowedCenters.split(',').map(s => s.trim().toLowerCase()) : [];
             
-            const pMatch = allowedProfessions.includes('*') || allowedProfessions.includes((student.ProfessionCode || '').toLowerCase());
+            const p = (student.ProfessionCode || '').toLowerCase();
+            const pMatch = allowedProfessions.includes('*') || allowedProfessions.some(ap => p.includes(ap));
             const cMatch = allowedCenters.includes('*') || allowedCenters.includes((student.CenterCode || '').toLowerCase());
             if (!pMatch || !cMatch) {
                 return res.status(403).send('Forbidden');

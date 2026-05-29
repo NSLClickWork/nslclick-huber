@@ -262,7 +262,7 @@
                 let matchesProf = profFilter === 'ALL';
                 if (!matchesProf) {
                     const keywords = profFilter.split(',');
-                    matchesProf = keywords.some(kw => cardProf.includes(kw.trim()));
+                    matchesProf = keywords.some(kw => cardProf.toUpperCase().includes(kw.trim()));
                 }
                 const matchesVideo = sortFilter !== 'HAS_VIDEO' || cardHasVideo === 'true';
 
