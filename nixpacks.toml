@@ -1,0 +1,11 @@
+[providers.node]
+node-version = "20"
+
+[phases.setup]
+nixPkgs = ["...", "ffmpeg", "chromium", "nss"]
+
+[phases.build]
+cmds = ["npm ci"]
+
+[start]
+cmd = "npm start"
