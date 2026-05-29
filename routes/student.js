@@ -62,7 +62,7 @@ function proxyStudentPhoto(photoField, options = {}) {
         }
 
         try {
-            res.redirect(`https://drive.google.com/uc?export=view&id=${photoDriveId}`);
+            res.redirect(`https://drive.google.com/thumbnail?id=${photoDriveId}&sz=w800`);
         } catch (err) {
             console.error(`${photoField} proxy error:`, err.message);
             res.status(500).send('Error');
